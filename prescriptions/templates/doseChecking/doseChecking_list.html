@@ -1,0 +1,134 @@
+{% include 'home.html' %}
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Kiểm tra liều dùng thuốc</h1>
+                </div><!-- /.col -->
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="#">Home</a></li>
+                        <li class="breadcrumb-item active">Dashboard v1</li>
+                    </ol>
+                </div><!-- /.col -->
+            </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                Kiểm tra liều dùng thuốc
+                            </h3>
+                        </div>
+                        <div id="doseCheckForm" class="card-body">
+                            {% csrf_token %}
+                            {% for prescription_medication in prescription_medications %}
+                            {% if prescription_medication.prescription == prescription %}
+                            <div class="form-group">
+                                <label for="patient_name">Họ tên bệnh nhân: </label>
+                                <input type="text" name="patient_name" class="form-control" id="patient_name"
+                                    value="{{ prescription.patient.first_name }} {{ prescription.patient.last_name }}"
+                                    readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="medicationName">Tên thuốc: </label>
+                                <input type="text" name="name" class="form-control" id="medicationName"
+                                    value="{{ prescription_medication.medication.name }}" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="prescribed_dose">Liều đề nghị của thuốc (mg): </label>
+                                <input type="text" name="prescribed_dose" class="form-control" id="prescribed_dose"
+                                    value="{{ prescription_medication.medication.prescribed_dose }}" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="dosage_form">Số lượng thuốc: {{ prescription_medication.medication.dosage_form }}</label>
+                                <input type="text" name="dosage_form" class="form-control" id="dosage_form"
+                                    value="{{ prescription_medication.quantity }}" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="patient_weight">Trọng lượng bệnh nhân (kg): </label>
+                                <input type="text" name="patient_weight" class="form-control" id="patient_weight"
+                                    value="{{ prescription.patient.patient_weight }}" readonly>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                            <span id="doseCheckResult"></span>
+                        </div>
+
+                        <div class="card-footer">
+                            <button class="btn btn-primary" data-prescription-id="{{ prescription.prescription_id }}" id="doseCheckButton"  onclick="checkDose()">Kiểm tra liều thuốc</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+    function checkDose() {
+        const patientWeight = parseFloat(document.getElementById('patient_weight').value);  //Trọng lượng bệnh nhân
+        const dosage_form = document.getElementById('dosage_form').value;   //Số lượng thuốc
+        const prescribedDose = parseFloat(document.getElementById('prescribed_dose').value);    //liều đề nghị của thuốc
+
+        const max_dose_per_kg = patientWeight * 0.1;     // liều tối đa cho mỗi kilogram trọng lượng của bệnh nhân.
+        const maxDose = max_dose_per_kg * patientWeight;    //Liều tối đa cho bệnh nhân (mg)
+
+        const actualDose = prescribedDose * dosage_form;  //Tính liều dùng thực tế dựa trên trọng lượng của bệnh nhân
+
+        // Kiểm tra xem liều dùng có vượt quá giới hạn không
+        const doseCheckResult = document.getElementById('doseCheckResult');
+        if (actualDose <= maxDose) {
+            doseCheckResult.innerText = "Liều dùng an toàn.";
+        } else {
+            doseCheckResult.innerText = "Liều dùng này vượt quá giới hạn, Đề nghị bác sĩ đưa đơn thuốc lại cho bệnh nhân.";
+        }
+    }
+</script>
+
+<script>
+    $(document).ready(function() {
+        $("#doseCheckButton").click(function() {
+            const csrfToken = $.cookie('csrftoken');
+            const prescriptionId = $(this).data('prescription-id');
+
+            const patientWeight = parseFloat(document.getElementById('patient_weight').value);  //Trọng lượng bệnh nhân
+            const dosageForm = parseFloat(document.getElementById('dosage_form').value);    //Số lượng thuốc
+            const prescribedDose = parseFloat(document.getElementById('prescribed_dose').value);    //liều đề nghị của thuốc
+
+            const maxDosePerKg = patientWeight * 0.1;   // liều tối đa cho mỗi kilogram trọng lượng của bệnh nhân.
+            const maxDose = maxDosePerKg * patientWeight;   //Liều tối đa cho bệnh nhân (mg)
+            const actualDose = prescribedDose * dosageForm; //Tính liều dùng thực tế dựa trên trọng lượng của bệnh nhân
+
+            let isDosageCorrect = actualDose <= maxDose ? true : false;
+
+            $.ajax({
+                type: 'POST',
+                url: '/save_dose_check_result/',
+                data: {
+                    'csrfmiddlewaretoken': csrfToken,
+                    'patient_weight': patientWeight,
+                    'dosage_form': dosageForm,
+                    'prescribed_dose': prescribedDose,
+                    'is_dosage_correct': isDosageCorrect,
+                    'prescription_id': prescriptionId  
+                },
+                success: function(response) {
+                    // Xử lý phản hồi sau khi lưu dữ liệu
+                },
+                error: function(error) {
+                    // Xử lý lỗi nếu có
+                }
+            });
+        });
+    });
+</script>

@@ -1,0 +1,93 @@
+{% include 'home.html' %}
+
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Thông tin thuốc</h1>
+                </div><!-- /.col -->
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="#">Home</a></li>
+                        <li class="breadcrumb-item active">Dashboard v1</li>
+                    </ol>
+                </div><!-- /.col -->
+            </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <!-- /.row -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"></h3>
+
+                            <div class="card-tools">
+                                <div class="input-group input-group-sm" style="width: 150px;">
+                                    <input type="text" name="table_search" class="form-control float-right"
+                                        placeholder="Search">
+
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn btn-default">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body table-responsive p-0">
+                            <table class="table table-hover text-nowrap">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Tên thuốc</th>
+                                        <th>Liều đề nghị của thuốc</th>
+                                        <th>Thành phần của thuốc</th>
+                                        <th>Nhà sản suất của thuốc</th>
+                                        <th>Dạng thuốc</th>
+                                        <th>Giá của thuốc</th>
+                                        <th>Số lượng kho:</th>
+                                        <th>Mô tả về thuốc</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for medication in medications %}
+                                    <tr>
+                                        <td>{{ medication.id }}</td>
+                                        <td>{{ medication.name }}</td>
+                                        <td>{{ medication.prescribed_dose }} Mg</td>
+                                        <td>{{ medication.active_ingredient }}</td>
+                                        <td>{{ medication.manufacturer }}</td>
+                                        <td>{{ medication.dosage_form }}</td>
+                                        <td>{{ medication.unit_price }}</td>
+                                        <td>{{ medication.stock_quantity }}</td>
+                                        <td>{{ medication.description }}</td>
+                                        <td><a href="{% url 'medication_update' medication.pk %}"
+                                                class="btn btn-primary">Sửa</a>
+                                                <a href="{% url 'medication_delete' medication.pk %}" data-url="{% url 'medication_delete' medication.pk %}" class="btn btn-primary delete-link">Xóa</a>
+
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+            </div>
+            <!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+</div>

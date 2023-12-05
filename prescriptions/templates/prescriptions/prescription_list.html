@@ -1,0 +1,213 @@
+{% include 'home.html' %}
+
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Thông tin kê đơn thuốc</h1>
+                </div><!-- /.col -->
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="#">Home</a></li>
+                        <li class="breadcrumb-item active">Dashboard v1</li>
+                    </ol>
+                </div><!-- /.col -->
+            </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                {% if prescription %}
+                                    Sửa thông tin kê đơn thuốc
+                                {% else %}
+                                    Thêm thông tin kê đơn thuốc
+                                {% endif %}
+                            </h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <!-- form start -->
+                        {% if form.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                        <form method="post" id="prescriptionForm">
+                            {% csrf_token %}
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="prescriptionPatient">Chọn Bệnh nhân:</label>
+                                    <select name="patient" required class="form-control" id="prescriptionPatient">
+                                        <option value="">-------Chọn Bệnh Nhân--------</option>
+                                        {% for patient in patients %}
+                                            <option value="{{ patient.pk }}">{{ patient.first_name }} {{ patient.last_name}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="prescriptionLastName">Bác sĩ kê đơn: </label>
+                                    <input type="text" name="doctor" class="form-control" id="prescriptionLastName"
+                                        placeholder="Nhập tên bác sĩ" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Chọn Thuốc:</label>
+                                    {% for medication in medications %}
+                                    <div class="form-check">
+                                        <input type="checkbox" name="medications" required id="medication{{ medication.medication_id }}" value="{{ medication.medication_id }}" class="form-check-input">
+                                        <label for="medication{{ medication.medication_id }}" class="form-check-label">{{ medication.name }}</label>
+                                        <input type="number" name="quantity_{{ medication.medication_id }}" required min="1"> {{ medication.dosage_form }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+
+                            </div>
+                            <!-- /.card-body -->
+                            <div class="card-footer">
+                                <button type="submit" class="btn btn-primary">Gửi</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div><!-- /.container-fluid -->
+    </section>
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <!-- /.row -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Liệt kê đơn thuốc</h3>
+                            <div class="card-tools">
+                                <div class="input-group input-group-sm" style="width: 150px;">
+                                    <input type="text" name="table_search" class="form-control float-right"
+                                        placeholder="Search">
+
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn btn-default">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body table-responsive p-0">
+                            <table class="table table-hover text-nowrap">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Tên bệnh nhân</th>
+                                        <th>Bác sĩ kê đơn</th>
+                                        <th>Thuốc</th>
+                                        <th>Số lượng thuốc</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for prescription in prescriptions %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ prescription.patient.first_name }} {{ prescription.patient.last_name }} ({{ prescription.patient.patient_weight }} Kg)</td>
+                                        <td>{{ prescription.doctor }}</td>
+                                        <td>
+                                            <ul>
+                                                {% for prescription_medication in prescription_medications %}
+                                                    {% if prescription_medication.prescription == prescription %}
+                                                        <li>{{ prescription_medication.medication.name }}</li>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </ul>
+                                        </td>
+                                        <td>
+                                            <ul>
+                                                {% for prescription_medication in prescription_medications %}
+                                                    {% if prescription_medication.prescription == prescription %}
+                                                        <li>{{ prescription_medication.quantity }} {{ prescription_medication.medication.dosage_form }}</li>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </ul>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'patient_update' prescription.patient.pk %}" class="btn btn-primary">Sửa</a>
+                                            <a href="{% url 'check_dose' prescription.prescription_id %}" class="btn btn-secondary">Kiểm tra liều dùng thuốc</a>
+                                            <a href="{% url 'prescription_delete' prescription.pk %}" data-url="{% url 'prescription_delete' prescription.pk %}" class="btn btn-primary delete-link-prescription">Xóa</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+            </div>
+            <!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+</div>
+<script>
+    document.getElementById('prescriptionForm').addEventListener('submit', function() {
+        var currentDate = new Date();
+        var formattedDate = currentDate.toISOString();
+
+        var hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'prescription_date';
+        hiddenInput.value = formattedDate;
+
+        document.getElementById('prescriptionForm').appendChild(hiddenInput);
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const deleteLinks = document.querySelectorAll('.delete-link-prescription'); // Sửa thành 'delete-link-prescription'
+        deleteLinks.forEach(link => {
+            link.addEventListener('click', (event) => {
+                event.preventDefault();
+                const url = event.target.getAttribute('data-url');
+                const confirmDelete = confirm('Bạn có chắc chắn muốn xóa đơn kê này?');
+                if (confirmDelete) {
+                    fetch(url, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken'),
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                        },
+                    })
+                        .then(response => {
+                            if (response.status === 204) {
+                                alert('Đã xóa thành công.');
+                                window.location.reload();
+                            } else {
+                                alert('Không thể xóa đơn kê này.');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Lỗi:', error);
+                        });
+                }
+            });
+        });
+
+        function getCookie(name) {
+            const cookieValue = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+            return cookieValue ? cookieValue.pop() : '';
+        }
+    });
+</script>
